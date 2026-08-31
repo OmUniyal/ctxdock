@@ -16,19 +16,62 @@
 
 ---
 
-## Quick Start
+## Requirements
 
-### Installation
+- Python 3.10+
 
-```powershell
+---
+
+## Installation
+
+```bash
+# Install for use
 pip install -e .
 
-# Pack full context with interactive or default settings
+# Install with dev dependencies (includes pytest)
+pip install -e ".[dev]"
+```
+
+---
+
+## Usage
+
+```bash
+# Pack current directory with defaults (copies to clipboard)
 ctxdock
 
 # Compress function bodies and include git diff
 ctxdock --compress signatures --git-diff -p "Refactor database connection pooling."
+
+# Set a custom token budget and write output to a file
+ctxdock --budget 32000 -o context.xml
+
+# Disable secret redaction and clipboard copy
+ctxdock --no-sanitize --no-copy
 ```
 
+## Options
+
+| Flag | Default | Description |
+|---|---|---|
+| `--compress [none\|signatures]` | `none` | Strip function bodies, keep signatures |
+| `--git-diff` | off | Append `git diff HEAD` to the payload |
+| `-p, --prompt TEXT` | — | Developer instruction to embed |
+| `--budget N` | `100000` | Maximum token budget |
+| `--no-sanitize` | off | Disable secret redaction |
+| `--no-copy` | off | Print to stdout instead of clipboard |
+| `-o, --output FILE` | — | Write payload to a file |
+
+---
+
+## Running Tests
+
+```bash
+pytest -v
+```
+
+---
+
 ## License
+
 MIT
