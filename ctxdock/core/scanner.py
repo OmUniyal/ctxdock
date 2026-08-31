@@ -27,7 +27,7 @@ class Scanner:
             with open(gitignore_path, "r", encoding="utf-8", errors="ignore") as f:
                 patterns.extend(f.readlines())
 
-        return pathspec.PathSpec.from_lines("gitwildmatch", patterns)
+        return pathspec.PathSpec.from_lines("gitignore", patterns)
 
     def scan_files(self) -> Generator[Path, None, None]:
         """
