@@ -44,9 +44,10 @@ class Config:
     """Configuration options for context packing."""
     token_budget: int = 100_000
     encoding_model: str = "cl100k_base"
-    compress_mode: str = "none"  # Options: 'none', 'signatures'
+    compress_mode: str = "none"
     include_git_diff: bool = False
     sanitize_secrets: bool = True
+    dry_run: bool = False
     ignore_patterns: List[str] = field(default_factory=lambda: DEFAULT_IGNORE_PATTERNS)
 
 

@@ -16,7 +16,6 @@ from ctxdock.core.sanitizer import Sanitizer
 from ctxdock.core.tokenizer import Tokenizer
 from ctxdock.core.formatter import ContextPayload, FileEntry
 
-# Conservative overhead reserved for XML tags and metadata.
 _XML_OVERHEAD_TOKENS = 300
 
 
@@ -34,11 +33,18 @@ class Packer:
         self.sanitizer = Sanitizer()
         self.tokenizer = Tokenizer(config.encoding_model)
 
-    def pack(self, prompt: Optional[str] = None) -> ContextPayload:
-        """Runs the pipeline and returns the assembled ContextPayload."""
+    def pack(
+        self,
+        prompt: Optional[str] = None,
+        files: Optional[List[Path]] = None,
+    ) -> ContextPayload:
+        """
+        Runs the pipeline and returns the assembled ContextPayload.
+        If `files` is provided, only those paths are packed (scanner is skipped).
+        Paths in `files` should be absolute or relative to root_dir.
+        """
         project_name = self.root_dir.name
 
-        # Deduct fixed overheads from the budget up front.
         prompt_tokens = self.tokenizer.count_tokens(prompt or "")
         budget = self.config.token_budget - _XML_OVERHEAD_TOKENS - prompt_tokens
 
@@ -48,11 +54,17 @@ class Packer:
             if git_diff:
                 budget -= self.tokenizer.count_tokens(git_diff)
 
+        # Resolve which paths to iterate over.
+        if files is not None:
+            paths = [Path(f).resolve().relative_to(self.root_dir) for f in files]
+        else:
+            paths = list(self.scanner.scan_files())
+
         entries: List[FileEntry] = []
         skipped: List[str] = []
         tokens_used = 0
 
-        for rel_path in self.scanner.scan_files():
+        for rel_path in paths:
             if budget <= 0:
                 skipped.append(str(rel_path))
                 continue
@@ -64,20 +76,21 @@ class Packer:
             if self.config.sanitize_secrets:
                 content = self.sanitizer.sanitize(content)
 
+            original_tokens = self.tokenizer.count_tokens(content)
+
             compressed = False
             if self.config.compress_mode != "none":
-                original = content
+                original_content = content
                 content = self.compressor.compress(
                     content, rel_path.suffix, self.config.compress_mode
                 )
-                compressed = content != original
+                compressed = content != original_content
 
             token_count = self.tokenizer.count_tokens(content)
             truncated = False
 
             if token_count > budget:
                 if budget > 0:
-                    # Fit what we can rather than skipping entirely.
                     content = self.tokenizer.truncate_to_budget(content, budget)
                     token_count = self.tokenizer.count_tokens(content)
                     truncated = True
@@ -92,6 +105,7 @@ class Packer:
                 path=str(rel_path),
                 content=content,
                 tokens=token_count,
+                original_tokens=original_tokens,
                 compressed=compressed,
                 truncated=truncated,
             ))

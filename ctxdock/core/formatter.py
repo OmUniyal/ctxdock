@@ -1,10 +1,9 @@
 """
 ctxdock.core.formatter
 ----------------------
-Builds structured XML context payloads from packed file data.
+Data structures for assembled context payloads.
 """
 
-import xml.etree.ElementTree as ET
 from dataclasses import dataclass, field
 from typing import List, Optional
 
@@ -14,6 +13,7 @@ class FileEntry:
     path: str
     content: str
     tokens: int
+    original_tokens: int = 0      # pre-compression token count; 0 if not compressed
     compressed: bool = False
     truncated: bool = False
 
