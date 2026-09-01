@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased]
+
+### Added
+
+- `--dry-run` flag — per-file token breakdown table showing original vs packed
+  token counts and compression savings percentage; no output is produced
+- `--file` flag — target one or more specific files instead of scanning the
+  whole directory; repeatable (`--file a.py --file b.py`)
+- `original_tokens` tracked per `FileEntry` to power dry-run compression comparisons
+- `dry_run` field added to `Config`
+
+---
+
 ## [0.1.0] - 2026-08-31
 
 ### Added
